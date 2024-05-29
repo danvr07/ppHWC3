@@ -27,32 +27,30 @@ instance Eq Lambda where
 -- 1.1.
 vars :: Lambda -> [String]
 vars (Var x) = [x]
-vars (App e1 e2) = nub $ vars e1 ++ vars e2  -- num elimina duplicatele
-vars (Abs x e) = nub $ x : vars e
+vars (App e1 e2) = nub $ vars e1 ++ vars e2
+vars (Abs x e) = nub $ x : vars e 
 vars (Macro _) = []
-
 
 -- 1.2.
 freeVars :: Lambda -> [String]
 freeVars (Var x) = [x]
 freeVars (App e1 e2) = nub $ freeVars e1 ++ freeVars e2
-freeVars (Abs x e) = freeVars e \\ [x]
+freeVars (Abs x e) = nub $ filter(/= x) (freeVars e)
 freeVars (Macro _) = []
 
 -- 1.3.
 newVar :: [String] -> String
-newVar xs = head $ filter (`notElem` xs) candidates
+newVar xs = head $ filter (`notElem` xs) candidates -- filtram variabilele care nu sunt in xs
   where
-    candidates = [1..] >>= flip replicateM ['a'..'z']
-    
+    candidates = [1..] >>= flip replicateM ['a'..'z'] -- generam toate variantele de variabile
+  
 -- 1.4.
 isNormalForm :: Lambda -> Bool
 isNormalForm (Var _) = True
-isNormalForm (Abs _ e) = isNormalForm(e)
-isNormalForm (App (Abs _ _) _) = False
+isNormalForm(App (Abs _ _)_) = False
 isNormalForm (App e1 e2) = isNormalForm e1 && isNormalForm e2
-isNormalForm (Macro _) = True  -- Assuming Macros are treated as variables for simplicity.
-
+isNormalForm (Abs _ e) = isNormalForm(e)
+isNormalForm (Macro _) = False
 
 -- 1.5.
 reduce :: String -> Lambda -> Lambda -> Lambda
@@ -72,33 +70,22 @@ reduce x e1 e2 = subst x e2 e1
       | otherwise = Abs y (subst x e e1)
     subst _ _ (Macro m) = Macro m
 
-
--- 1.6.
--- normalStep :: Lambda -> Lambda
--- normalStep (App (Abs x e) e2) = reduce e x e2
--- normalStep (App e1 e2) = case normalStep e1 of
---                            e1'@(Abs _ _) -> App e1' e2
---                            e1' -> App e1' (normalStep e2)
--- normalStep e = e
-
 normalStep :: Lambda -> Lambda
-normalStep (App (Abs x e1) e2) = reduce x e1 e2
+normalStep (App (Abs x e) e2) = reduce x e e2
 normalStep (App e1 e2)
-  | e1 == normalStep e1 = App e1 (normalStep e2)
+  | isNormalForm e1 = App e1 (normalStep e2)
   | otherwise = App (normalStep e1) e2
 normalStep (Abs x e) = Abs x (normalStep e)
 normalStep e = e
 
-
-
 -- 1.7.
 applicativeStep :: Lambda -> Lambda
-applicativeStep (App (Abs x e1)(Var e2)) = reduce x e1 (Var e2)
+applicativeStep (App (Abs x e) (Var e2)) = reduce x e (Var e2)
 applicativeStep (App (Abs x e1)(Abs y e2)) = reduce x e1 (Abs y e2)
 applicativeStep (App (Abs x e1) e2) = App (Abs x e1) (applicativeStep e2)
 applicativeStep (App e1 e2)
-  | e1 == applicativeStep e1 = App e1 (normalStep e2)
-  | otherwise = App (normalStep e1) e2
+  | isNormalForm e1 = App e1 (applicativeStep e2)
+  | otherwise = App (applicativeStep e1) e2
 applicativeStep (Abs x e) = Abs x (applicativeStep e)
 applicativeStep e = e
 

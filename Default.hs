@@ -23,34 +23,28 @@ y = Abs "f" $ App fix fix
   where fix = Abs "x" $ App vf (App vx vx)
 
 -- 4.1. Boolean encodings
-bTrue = 
-  Abs "x" $ Abs "y" $ vx
-bFalse = 
-  Abs "x" $ Abs "y" $ vy
-bAnd = 
-  Abs "x" $ Abs "y" $ App (App vx vy) vx
-bOr = 
-  Abs "x" $ Abs "y" $ App (App vx vx) vy
-
+bTrue = k
+bFalse = ki
+bAnd = Abs "x" $ Abs "y" $ App (App vx vy) vx
+bOr = Abs "x" $ Abs "y" $ App (App vx vx) vy
 bNot = Abs "x" $ App (App vx bFalse) bTrue
 bXor = Abs "x" $ Abs "y" $ App (App bOr (App (App bAnd vx) (App bNot vy))) (App (App bAnd (App bNot vx)) vy)
 
 
-
 -- 4.2. Pair encodings
-pair = undefined
-first = undefined
-second = undefined
+pair = Abs "x" $ Abs "y" $ Abs "f" $ App (App vf vx) vy
+first = Abs "p" $ App(Var "p") bTrue
+second = Abs "p" $ App(Var "p") bFalse
 
 -- 4.3. Natural number encodings
-n0 = undefined
-n1 = undefined
-n2 = undefined
-nSucc = undefined
-nPred = undefined
-nAdd = undefined
-nSub = undefined
-nMult = undefined
+n0 = Abs "f" $ Abs "x" $ vx
+n1 = Abs "f" $ Abs "x" $ App vf vx
+n2 = Abs "f" $ Abs "x" $ App vf (App vf vx)
+nSucc = Abs "n" $ Abs "f" $ Abs "x" $ App vf (App (App vn vf) vx)
+nPred = Abs "n" $ Abs "f" $ Abs "x" (App (App (App vn (Abs "g" $ Abs "h" $ App vh (App vg vf))) (Abs "y" vx)) (Abs "y" vy))
+nAdd = Abs "n" $ Abs "m" $ Abs "f" $ Abs "x" $ App (App vn vf) (App (App vm vf) vx)
+nSub = Abs "n" $ Abs "m" $ App (App vm nPred) vn
+nMult = Abs "n" $ Abs "m" $ Abs "f" $ App vn (App vm vf)
 
 -- Default Context
 defaultContext :: Context

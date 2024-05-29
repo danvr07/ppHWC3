@@ -24,14 +24,13 @@ substituteMacros ctx expr = case expr of
                     return $ Abs v body'
     Macro m     -> case lookup m ctx of
                       Just l  -> Right l
-                      Nothing -> Left $ "Undefined macro: " ++ m
+                      Nothing -> Left $ "Macrou nedefinit: " ++ m
 
 -- 3.1. Implementați funcția simplifyCtx
 simplifyCtx :: Context -> (Lambda -> Lambda) -> Lambda -> Either String [Lambda]
 simplifyCtx ctx step expr = do
     substitutedExpr <- substituteMacros ctx expr
     return $ simplify step substitutedExpr
-
 
 normalCtx :: Context -> Lambda -> Either String [Lambda]
 normalCtx ctx = simplifyCtx ctx normalStep

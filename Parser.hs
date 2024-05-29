@@ -14,20 +14,18 @@ instance Monad Parser where
     return v = Parser $ \s -> Just (v, s)
     mp >>= f = Parser $ \s -> case parse mp s of
                                 Nothing -> Nothing
-                                Just (v, rest) -> parse (f v) rest  -- curs  
+                                Just (v, rest) -> parse (f v) rest 
 
 -- Instanța Applicative pentru Parser
 instance Applicative Parser where
-  af <*> mp = do
+  af <*> mp = do 
     f <- af
     v <- mp
     return $ f v
   pure = return
 
-
-
 -- Instanța Functor pentru Parser
-instance Functor Parser where  -- curs
+instance Functor Parser where
     fmap f mp = do
         x <- mp
         return $ f x
@@ -39,54 +37,53 @@ instance Alternative Parser where
                                 Nothing -> parse p2 s 
                                 res -> res 
 
+failParser :: Parser a
+failParser = Parser $ \s -> Nothing
 
---------
-plusParser :: Parser a -> Parser[a] -- curs
+plusParser :: Parser a -> Parser[a]
 plusParser p = do
     x <- p
     xs <- starParser p
     return (x:xs)
 
 starParser :: Parser a -> Parser[a]
-starParser p = plusParser p <|> return [] -- curs
+starParser p = plusParser p <|> return []
 
-
--- Parsere de bază
 charParser :: Char -> Parser Char
 charParser c = Parser $ \s -> 
     case s of 
         [] -> Nothing
-        (x:xs) -> if x == c then Just (x, xs) else Nothing --curs
+        (x:xs) -> if x == c then Just (x, xs) else Nothing
 
 predicateParser :: (Char -> Bool) -> Parser Char
 predicateParser p = Parser $ \s -> 
     case s of 
         [] -> Nothing
-        (x:xs) -> if p x then Just (x, xs) else Nothing --curs
+        (x:xs) -> if p x then Just (x, xs) else Nothing
 
 
+-- Parsere pentru spații
 whitespaceParser :: Parser String
-whitespaceParser = starParser (charParser ' ') -- curs
+whitespaceParser = starParser (charParser ' ')
 
 -- Parsere pentru variabile și identificatori
 varParser :: Parser String
 varParser = do 
     x <- predicateParser isAlpha
-    xs <- many (predicateParser isAlphaNum) -- curs
+    xs <- many (predicateParser isAlphaNum)
     return (x:xs)
 
 macroParser :: Parser Lambda
 macroParser = do
-    name <- some (predicateParser isMacro)
-    return $ Macro name
-  where
-    isMacro c = isUpper c || isDigit c -- schimbat 
-
+    xs <- some (predicateParser (\c -> isUpper c || isDigit c))
+    return (Macro xs)
 
 -- Parsere pentru lambda termeni
-varExprParser :: Parser Lambda -- curs
+varExprParser :: Parser Lambda
 varExprParser = Var <$> varParser
 
+
+--Parser pentru lambda abstracti
 absParser :: Parser Lambda
 absParser = do
     charParser '\\' <|> charParser 'λ'
@@ -98,6 +95,8 @@ absParser = do
     body <- exprParser
     return (Abs var body)
 
+
+-- Parser pentru aplicări de lambda termeni
 appParser :: Parser Lambda
 appParser = do
     charParser '('
@@ -110,27 +109,13 @@ appParser = do
     return (App e1 e2)
 
 -- Parsere pentru expresii complete
-exprParser :: Parser Lambda -- curs
---exprParser = absParser <|> appParser <|> varExprParser <|> macroParser
+exprParser :: Parser Lambda
 exprParser = macroParser <|> varExprParser <|> absParser <|> appParser
 
-parenExprParser :: Parser Lambda
-parenExprParser = do
-    charParser '('
-    whitespaceParser
-    e <- exprParser
-    whitespaceParser
-    charParser ')'
-    return e
-
---Funcția principală de parsare care returnează direct un Lambda
-parseLambda :: String -> Lambda
+-- 2.1. / 3.2.parseLambda :: String -> Lambda
 parseLambda input = case parse exprParser input of
-    Nothing -> error "Parse error: invalid input"
+    Nothing -> error "Intrare nevalidă"
     Just (result, _) -> result
--- 2.1. / 3.2.
--- parseLambda :: String -> Lambda
--- parseLambda = parse exprParser
 
 -- 3.3.
 bindingParser :: Parser Line
@@ -150,8 +135,8 @@ lineParser = bindingParser <|> evalParser
 
 parseLine :: String -> Either String Line
 parseLine input = case parse lineParser input of
-    Nothing -> Left "Eroare de parsare: intrare nevalidă"
+    Nothing -> Left "Intrare nevalidă"
     Just (result, remaining) -> 
         if null remaining 
             then Right result 
-            else Left "Eroare de parsare: intrare neconsumată complet"
+            else Left "Intrare neconsumată complet"
