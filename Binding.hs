@@ -12,16 +12,20 @@ instance Show Line where
     show (Binding s l) = s ++ " = " ++ show l
 
 -- 3.1.
-substituteMacros :: Context -> Lambda -> Either String Lambda
-substituteMacros ctx expr = case expr of
+simplifyCtxHelper :: Context -> Lambda -> Either String Lambda
+simplifyCtxHelper ctx expr = case expr of
+    -- daca expresia este o variabila, o returnam
     Var v       -> Right $ Var v
+    -- daca expresia este o aplicatie, aplicam functia pe ambele parti
     App l1 l2   -> do
-                    l1' <- substituteMacros ctx l1
-                    l2' <- substituteMacros ctx l2
+                    l1' <- simplifyCtxHelper ctx l1
+                    l2' <- simplifyCtxHelper ctx l2
                     return $ App l1' l2'
+    -- daca expresia este o abstractie, aplicam functia pe corp
     Abs v body  -> do
-                    body' <- substituteMacros ctx body
+                    body' <- simplifyCtxHelper ctx body
                     return $ Abs v body'
+    -- daca expresia este un macro, incercam sa-l gasim in context
     Macro m     -> case lookup m ctx of
                       Just l  -> Right l
                       Nothing -> Left $ "Macrou nedefinit: " ++ m
@@ -29,8 +33,8 @@ substituteMacros ctx expr = case expr of
 -- 3.1. Implementați funcția simplifyCtx
 simplifyCtx :: Context -> (Lambda -> Lambda) -> Lambda -> Either String [Lambda]
 simplifyCtx ctx step expr = do
-    substitutedExpr <- substituteMacros ctx expr
-    return $ simplify step substitutedExpr
+    substExpr <- simplifyCtxHelper ctx expr 
+    return $ simplify step substExpr
 
 normalCtx :: Context -> Lambda -> Either String [Lambda]
 normalCtx ctx = simplifyCtx ctx normalStep
