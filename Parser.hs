@@ -86,12 +86,9 @@ varExprParser = Var <$> varParser
 --Parser pentru lambda abstracti
 absParser :: Parser Lambda
 absParser = do
-    charParser '\\' <|> charParser 'λ'
-    whitespaceParser
+    charParser '\\'
     var <- varParser
-    whitespaceParser
     charParser '.'
-    whitespaceParser
     body <- exprParser
     return (Abs var body)
 

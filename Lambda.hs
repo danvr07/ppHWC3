@@ -42,8 +42,7 @@ freeVars (Macro _) = []
 newVar :: [String] -> String
 newVar xs = head $ filter (`notElem` xs) candidates
   where
-    candidates = [1..] >>= flip replicateM ['a'..'z'] -- generam toate variantele de variabile
-  
+    candidates = [1..] >>= flip replicateM ['a'..'z']
 -- 1.4.
 isNormalForm :: Lambda -> Bool
 isNormalForm (Var _) = True
