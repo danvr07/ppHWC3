@@ -109,7 +109,8 @@ appParser = do
 exprParser :: Parser Lambda
 exprParser = macroParser <|> varExprParser <|> absParser <|> appParser
 
--- 2.1. / 3.2.parseLambda :: String -> Lambda
+-- 2.1. / 3.2.
+parseLambda :: String -> Lambda
 parseLambda input = case parse exprParser input of
     Nothing -> error "Intrare nevalidă"
     Just (result, _) -> result

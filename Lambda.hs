@@ -46,7 +46,7 @@ newVar xs = head $ filter (`notElem` xs) candidates
 -- 1.4.
 isNormalForm :: Lambda -> Bool
 isNormalForm (Var _) = True
-isNormalForm(App (Abs _ _)_) = False
+isNormalForm (App (Abs _ _)_) = False
 isNormalForm (App e1 e2) = isNormalForm e1 && isNormalForm e2
 isNormalForm (Abs _ e) = isNormalForm(e)
 isNormalForm (Macro _) = False
