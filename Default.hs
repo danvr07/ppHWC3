@@ -28,8 +28,7 @@ bFalse = ki
 bAnd = Abs "x" $ Abs "y" $ App (App vx vy) vx
 bOr = Abs "x" $ Abs "y" $ App (App vx vx) vy
 bNot = Abs "x" $ App (App vx bFalse) bTrue
-bXor = Abs "x" $ Abs "y" $ App (App bOr (App (App bAnd vx) (App bNot vy))) (App (App bAnd (App bNot vx)) vy)
-
+bXor = Abs "x" $ Abs "y" $ App (App vx (App bNot vy)) vy
 
 -- 4.2. Pair encodings
 pair = Abs "x" $ Abs "y" $ Abs "f" $ App (App vf vx) vy
