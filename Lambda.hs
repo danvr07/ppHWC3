@@ -38,9 +38,9 @@ freeVars (App e1 e2) = nub $ freeVars e1 ++ freeVars e2
 freeVars (Abs x e) = nub $ filter(/= x) (freeVars e)
 freeVars (Macro _) = []
 
--- 1.3.
+-- 1.3.`
 newVar :: [String] -> String
-newVar xs = head $ filter (`notElem` xs) candidates -- filtram variabilele care nu sunt in xs
+newVar xs = head $ filter (`notElem` xs) candidates
   where
     candidates = [1..] >>= flip replicateM ['a'..'z'] -- generam toate variantele de variabile
   
@@ -54,21 +54,25 @@ isNormalForm (Macro _) = False
 
 -- 1.5.
 reduce :: String -> Lambda -> Lambda -> Lambda
-reduce x e1 e2 = subst x e2 e1
+reduce x e1 e2 = reduceHelper x e2 e1
   where
-    subst :: String -> Lambda -> Lambda -> Lambda
-    subst x e (Var y)
+    reduceHelper :: String -> Lambda -> Lambda -> Lambda
+    --cazul in care expresia este o variabila
+    reduceHelper x e (Var y)
       | x == y    = e
       | otherwise = Var y
-    subst x e (App e1 e2) = App (subst x e e1) (subst x e e2)
-    subst x e (Abs y e1)
+    --cazul in care expresia este o aplicatie
+    reduceHelper x e (App e1 e2) = App (reduceHelper x e e1) (reduceHelper x e e2)
+    --cazul in care expresia este o abstractie
+    reduceHelper x e (Abs y e1)
       | x == y    = Abs y e1
       | y `elem` freeVars e = 
           let z = newVar (vars e1 ++ vars e ++ [x])
-              e1' = subst y (Var z) e1
-          in Abs z (subst x e e1')
-      | otherwise = Abs y (subst x e e1)
-    subst _ _ (Macro m) = Macro m
+              e1' = reduceHelper y (Var z) e1
+          in Abs z (reduceHelper x e e1')
+      | otherwise = Abs y (reduceHelper x e e1)
+    --cazul in care expresia este un macro
+    reduceHelper _ _ (Macro m) = Macro m -- nu se poate reduce un macro
 
 normalStep :: Lambda -> Lambda
 normalStep (App (Abs x e) e2) = reduce x e e2
@@ -91,9 +95,11 @@ applicativeStep e = e
 
 -- 1.8.
 simplify :: (Lambda -> Lambda) -> Lambda -> [Lambda]
-simplify step e = e : if e == e' then [] else simplify step e'
+simplify step e = e : case trasnformedE == e of
+    True  -> []
+    False -> simplify step trasnformedE
   where
-    e' = step e
+   trasnformedE = step e
 
 normal :: Lambda -> [Lambda]
 normal = simplify normalStep
