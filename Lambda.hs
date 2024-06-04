@@ -57,11 +57,15 @@ isNormalForm (Abs _ e) = isNormalForm(e)
 isNormalForm (Macro _) = False
 
 normalStep :: Lambda -> Lambda
+-- Aplicație cu o abstracție
 normalStep (App (Abs x e) e2) = reduce x e e2
+-- Aplicație generală
 normalStep (App e1 e2)
-  | isNormalForm e1 = App e1 (normalStep e2)
-  | otherwise = App (normalStep e1) e2
+  | isNormalForm e1 = App e1 (normalStep e2)  -- Reduce e2
+  | otherwise = App (normalStep e1) e2  -- Reduce e1
+-- Abstracție
 normalStep (Abs x e) = Abs x (normalStep e)
+-- Expresie în formă normală
 normalStep e = e
 
 -- 1.5.
@@ -88,12 +92,17 @@ reduce x e1 e2 = reduceHelper x e2 e1
 
 -- 1.7.
 applicativeStep :: Lambda -> Lambda
+-- Aplicație cu o abstracție și o variabilă
 applicativeStep (App (Abs x e) (Var e2)) = reduce x e (Var e2)
-applicativeStep (App (Abs x e)(Abs y e2)) = reduce x e (Abs y e2)
+-- Aplicație cu două abstracții
+applicativeStep (App (Abs x e) (Abs y e2)) = reduce x e (Abs y e2)
+-- Aplicație generală
 applicativeStep (App e1 e2)
-  | isNormalForm e1 = App e1 (applicativeStep e2)
-  | otherwise = App (applicativeStep e1) e2
+  | isNormalForm e1 = App e1 (applicativeStep e2)  -- Reduce e2
+  | otherwise = App (applicativeStep e1) e2  -- Reduce e1
+-- Abstracție
 applicativeStep (Abs x e) = Abs x (applicativeStep e)
+-- Expresie în formă normală
 applicativeStep e = e
 
 -- 1.8.
