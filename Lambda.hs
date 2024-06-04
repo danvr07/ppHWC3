@@ -85,7 +85,6 @@ normalStep e = e
 applicativeStep :: Lambda -> Lambda
 applicativeStep (App (Abs x e) (Var e2)) = reduce x e (Var e2)
 applicativeStep (App (Abs x e)(Abs y e2)) = reduce x e (Abs y e2)
-applicativeStep (App (Abs x e1) e2) = App (Abs x e1) (applicativeStep e2)
 applicativeStep (App e1 e2)
   | isNormalForm e1 = App e1 (applicativeStep e2)
   | otherwise = App (applicativeStep e1) e2
