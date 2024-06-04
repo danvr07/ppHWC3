@@ -51,6 +51,14 @@ isNormalForm (App e1 e2) = isNormalForm e1 && isNormalForm e2
 isNormalForm (Abs _ e) = isNormalForm(e)
 isNormalForm (Macro _) = False
 
+normalStep :: Lambda -> Lambda
+normalStep (App (Abs x e) e2) = reduce x e e2
+normalStep (App e1 e2)
+  | isNormalForm e1 = App e1 (normalStep e2)
+  | otherwise = App (normalStep e1) e2
+normalStep (Abs x e) = Abs x (normalStep e)
+normalStep e = e
+
 -- 1.5.
 reduce :: String -> Lambda -> Lambda -> Lambda
 reduce x e1 e2 = reduceHelper x e2 e1
@@ -72,14 +80,6 @@ reduce x e1 e2 = reduceHelper x e2 e1
       | otherwise = Abs y (reduceHelper x e e1)
     --cazul in care expresia este un macro
     reduceHelper _ _ (Macro m) = Macro m -- nu se poate reduce un macro
-
-normalStep :: Lambda -> Lambda
-normalStep (App (Abs x e) e2) = reduce x e e2
-normalStep (App e1 e2)
-  | isNormalForm e1 = App e1 (normalStep e2)
-  | otherwise = App (normalStep e1) e2
-normalStep (Abs x e) = Abs x (normalStep e)
-normalStep e = e
 
 -- 1.7.
 applicativeStep :: Lambda -> Lambda
