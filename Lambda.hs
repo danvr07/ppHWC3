@@ -45,10 +45,15 @@ newVar xs = head $ filter (`notElem` xs) candidates
     candidates = [1..] >>= flip replicateM ['a'..'z']
 -- 1.4.
 isNormalForm :: Lambda -> Bool
+-- cazul variabila
 isNormalForm (Var _) = True
+-- cazul aplicatie, abstractie
 isNormalForm (App (Abs _ _)_) = False
+-- cazul aplciatir
 isNormalForm (App e1 e2) = isNormalForm e1 && isNormalForm e2
+-- cazul abstractie
 isNormalForm (Abs _ e) = isNormalForm(e)
+-- macrou
 isNormalForm (Macro _) = False
 
 normalStep :: Lambda -> Lambda
